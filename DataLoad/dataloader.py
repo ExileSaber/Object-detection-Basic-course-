@@ -5,15 +5,17 @@ from torch.utils.data import Dataset, DataLoader, random_split
 from PIL import Image
 from torchvision.transforms import ToTensor
 from utils.data_func import parse_xml
+from DataLoad.image_augment import basic_augment
 
 
 class PedestrianDataset(Dataset):
-    def __init__(self, image_folder, xml_folder, transform=None, target_size=(224, 224)):
+    def __init__(self, image_folder, xml_folder, transform=None, target_size=(224, 224), augmentations=None):
         self.image_folder = image_folder
         self.xml_folder = xml_folder
         self.transform = transform
         self.target_size = target_size
         self.image_files = [f for f in os.listdir(image_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+        self.augmentations = augmentations
     
     def __len__(self):
         return len(self.image_files)
@@ -24,7 +26,6 @@ class PedestrianDataset(Dataset):
 
         # 加载图像
         image = Image.open(image_path).convert("RGB")
-        image = image.resize(self.target_size)
         
         # 加载对应的 XML 文件
         xml_name = image_name.replace('.jpg', '.xml').replace('.jpeg', '.xml')
@@ -34,6 +35,9 @@ class PedestrianDataset(Dataset):
 
         boxes = torch.tensor(boxes, dtype=torch.float32)
         labels = torch.tensor(labels, dtype=torch.long)
+
+        if self.augmentations:
+            image, boxes = self.augmentations(args, image, boxes, self.target_size)
 
         if self.transform:
             image = self.transform(image)
@@ -62,14 +66,14 @@ def collate_fn(batch):
     return images, padded_boxes, padded_labels
 
 
-def get_dataloader(image_path, xml_path, train_rate, val_rate):
+def get_dataloader(args, augmentations=None):
     # 创建数据集
-    dataset = PedestrianDataset(image_path, xml_path, transform=ToTensor())
+    dataset = PedestrianDataset(args.image_folder, args.xml_folder, transform=ToTensor(), augmentations=augmentations)
 
     # 计算划分的大小
     total_size = len(dataset)
-    train_size = int(train_rate * total_size)
-    val_size = int(val_rate * total_size)
+    train_size = int(args.train_rate * total_size)
+    val_size = int(args.val_rate * total_size)
     test_size = total_size - train_size - val_size
 
     # 划分数据集
@@ -95,7 +99,7 @@ if __name__ == "__main__":
     train_rate = args.train_rate
     val_rate = args.val_rate
 
-    train_loader, val_loader, test_loader = get_dataloader(image_folder, xml_folder, train_rate, val_rate)
+    train_loader, val_loader, test_loader = get_dataloader(image_folder, xml_folder, train_rate, val_rate, basic_augment)
 
     # 使用 DataLoader 迭代数据
     for images, boxes, labels in train_loader:

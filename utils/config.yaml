@@ -4,3 +4,14 @@ xml_folder: F:\Lwm_Data\person_data_01\Annotations
 train_rate: 0.8
 val_rate: 0.1
 
+target_size: 
+  - 400
+  - 400
+
+image_save_path: F:\Lwm_Code\Visual\Save
+
+# 数据增强
+hflip: 0.5
+rotate: 0.5
+color: 0.5
+crop: 0.5
