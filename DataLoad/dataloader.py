@@ -8,8 +8,12 @@ from utils.data_func import parse_xml
 from DataLoad.image_augment import basic_augment
 
 
+MAX_NUM_BOXES = 49
+
+
 class PedestrianDataset(Dataset):
-    def __init__(self, image_folder, xml_folder, transform=None, target_size=(224, 224), augmentations=None):
+    def __init__(self, args, image_folder, xml_folder, transform=None, target_size=(224, 224), augmentations=None):
+        self.args = args
         self.image_folder = image_folder
         self.xml_folder = xml_folder
         self.transform = transform
@@ -34,10 +38,10 @@ class PedestrianDataset(Dataset):
         boxes, labels = parse_xml(xml_file=xml_path)
 
         boxes = torch.tensor(boxes, dtype=torch.float32)
-        labels = torch.tensor(labels, dtype=torch.long)
+        labels = torch.tensor(labels, dtype=torch.float32)
 
         if self.augmentations:
-            image, boxes = self.augmentations(args, image, boxes, self.target_size)
+            image, boxes, labels = self.augmentations(self.args, image, boxes, labels, self.target_size)
 
         if self.transform:
             image = self.transform(image)
@@ -48,27 +52,43 @@ class PedestrianDataset(Dataset):
 # 自定义collate_fn来处理不同数量的目标框
 def collate_fn(batch):
     images, boxes, labels = zip(*batch)
-    max_num_boxes = max([len(b) for b in boxes])
 
     padded_boxes = []
     padded_labels = []
+    masks = []  # 用于标记有效框的 mask
+
     for i, b in enumerate(boxes):
-        padded_boxes.append(np.pad(b, ((0, max_num_boxes - len(b)), (0, 0)), mode='constant', constant_values=0))
-        label_len = len(b)
-        padded_label = np.pad(labels[i].numpy(), (0, max_num_boxes - label_len), mode='constant', constant_values=0)
+        num_boxes = min(len(b), MAX_NUM_BOXES)  # 限制最大框数
+
+        # 1. 计算填充长度
+        pad_len = max(0, MAX_NUM_BOXES - num_boxes)
+
+        # 2. 填充边界框，使用 [-1, -1, -1, -1] 作为无效框
+        padded_box = np.pad(b, ((0, pad_len), (0, 0)), mode='constant', constant_values=-1)
+        padded_boxes.append(padded_box)
+
+        # 3. 填充类别标签，使用 -1 作为无效类别
+        padded_label = np.pad(labels[i].numpy(), (0, pad_len), mode='constant', constant_values=-1)
         padded_labels.append(padded_label)
 
-    padded_boxes = torch.tensor(padded_boxes, dtype=torch.float32)
-    padded_labels = torch.tensor(padded_labels, dtype=torch.long)
+        # 4. 生成有效 mask（真实框为 1，填充框为 0）
+        mask = np.pad(np.ones(num_boxes), (0, pad_len), mode='constant', constant_values=0)
+        masks.append(mask)
 
-    images = torch.stack(images, 0)
+    # 转换为 PyTorch 张量
+    padded_boxes = torch.tensor(np.array(padded_boxes), dtype=torch.float32)  # 形状: (batch_size, max_num_boxes, 4)
+    padded_labels = torch.tensor(np.array(padded_labels), dtype=torch.float32)   # 形状: (batch_size, max_num_boxes)
+    masks = torch.tensor(np.array(masks), dtype=torch.bool)                   # 形状: (batch_size, max_num_boxes)
 
-    return images, padded_boxes, padded_labels
+    # 处理图像
+    images = torch.stack(images, 0)  # 形状: (batch_size, C, H, W)
+
+    return images, padded_boxes, padded_labels, masks
 
 
 def get_dataloader(args, augmentations=None):
     # 创建数据集
-    dataset = PedestrianDataset(args.image_folder, args.xml_folder, transform=ToTensor(), augmentations=augmentations)
+    dataset = PedestrianDataset(args, args.image_folder, args.xml_folder, transform=ToTensor(), augmentations=augmentations)
 
     # 计算划分的大小
     total_size = len(dataset)
@@ -85,34 +105,3 @@ def get_dataloader(args, augmentations=None):
     test_loader = DataLoader(test_dataset, batch_size=2, collate_fn=collate_fn, shuffle=False)
 
     return train_loader, val_loader, test_loader
-
-
-if __name__ == "__main__":
-    from utils.read_cfg import load_yaml_as_namespace
-    from utils.func import get_absolute_path
-
-    file_path = "utils/config.yaml"
-    args = load_yaml_as_namespace(get_absolute_path(file_path))
-
-    image_folder = args.image_folder
-    xml_folder = args.xml_folder
-    train_rate = args.train_rate
-    val_rate = args.val_rate
-
-    train_loader, val_loader, test_loader = get_dataloader(image_folder, xml_folder, train_rate, val_rate, basic_augment)
-
-    # 使用 DataLoader 迭代数据
-    for images, boxes, labels in train_loader:
-        print(f"Train batch shape: {images.shape}")
-        print(f"Boxes: {boxes}")
-        print(f"Labels: {labels}")
-
-    for images, boxes, labels in val_loader:
-        print(f"Validation batch shape: {images.shape}")
-        print(f"Boxes: {boxes}")
-        print(f"Labels: {labels}")
-
-    for images, boxes, labels in test_loader:
-        print(f"Test batch shape: {images.shape}")
-        print(f"Boxes: {boxes}")
-        print(f"Labels: {labels}")

@@ -41,8 +41,8 @@ if __name__ == "__main__":
     config_path = "utils/config.yaml"
     args = load_yaml_as_namespace(get_absolute_path(config_path))
 
-    image_path = args.image_folder
-    image_analyze(image_path)
+    # image_path = args.image_folder
+    # image_analyze(image_path)
 
     xml_path = args.xml_folder
     label_analyze(get_absolute_path(xml_path))

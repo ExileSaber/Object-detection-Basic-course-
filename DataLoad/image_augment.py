@@ -4,7 +4,7 @@ from torchvision.transforms import functional as F
 from torchvision.transforms import RandomCrop
 
 # 增强方法：常见的增强方法
-def basic_augment(args, image, boxes, target_size):
+def basic_augment(args, image, boxes, labels, target_size):
     width, height = image.size  # (width, height)
 
     # 图像缩放到目标尺寸
@@ -61,6 +61,7 @@ def basic_augment(args, image, boxes, target_size):
         # 只保留有效的框（w > 0 and h > 0）
         valid_boxes = (boxes[:, 2] > boxes[:, 0]) & (boxes[:, 3] > boxes[:, 1])
         boxes = boxes[valid_boxes]
+        labels = labels[valid_boxes]
 
         # 填充图像到目标大小
         padding = (0, 0, target_size[0] - w, target_size[1] - h)
@@ -68,4 +69,4 @@ def basic_augment(args, image, boxes, target_size):
 
     
 
-    return image, boxes
+    return image, boxes, labels

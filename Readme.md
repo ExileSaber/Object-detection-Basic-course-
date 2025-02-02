@@ -17,12 +17,15 @@
 
 3. 根据任务需求调整数据格式
 
+对应代码 `DataLoad/image_augment.py`，检查效果代码 `Test/test_image_augment.py`
 
 ## 3. 数据迭代器
 
 1. 构造数据集，整合数据增强和后续处理
 
 2. 训练验证测试集的划分
+
+对应代码 `DataLoad/dataloader.py`，检查效果代码 `Test/test_dataloader.py`
 
 ## 4. 模型搭建
 
