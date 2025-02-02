@@ -23,7 +23,7 @@ def start_train(args):
     # 优化器
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    for epoch in range(10):
+    for epoch in range(args.epochs):
         for images, boxes, labels, masks in train_loader:
             # 前向传播
             class_logits, bbox_preds = model(images)

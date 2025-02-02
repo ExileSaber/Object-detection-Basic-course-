@@ -1,6 +1,8 @@
 image_folder: F:\Lwm_Data\person_data_01\JPEGImages
 xml_folder: F:\Lwm_Data\person_data_01\Annotations
 
+epochs: 100
+
 train_rate: 0.8
 val_rate: 0.1
 
