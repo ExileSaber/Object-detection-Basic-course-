@@ -34,7 +34,6 @@ def label_analyze(path):
     print("-------------- 最大长度 --------------\n", max(labellen_list))
 
 
-
 if __name__ == "__main__":
     from utils.read_cfg import load_yaml_as_namespace
     from utils.func import get_absolute_path
@@ -42,8 +41,8 @@ if __name__ == "__main__":
     config_path = "utils/config.yaml"
     args = load_yaml_as_namespace(get_absolute_path(config_path))
 
-    # image_path = args.image_folder
-    # image_analyze(image_path)
+    image_path = args.image_folder
+    image_analyze(image_path)
 
     xml_path = args.xml_folder
     label_analyze(get_absolute_path(xml_path))
