@@ -77,7 +77,7 @@ def collate_fn(batch):
 
     # 转换为 PyTorch 张量
     padded_boxes = torch.tensor(np.array(padded_boxes), dtype=torch.float32)  # 形状: (batch_size, max_num_boxes, 4)
-    padded_labels = torch.tensor(np.array(padded_labels), dtype=torch.long)   # 形状: (batch_size, max_num_boxes)
+    padded_labels = torch.tensor(np.array(padded_labels), dtype=torch.float32)   # 形状: (batch_size, max_num_boxes)
     masks = torch.tensor(np.array(masks), dtype=torch.bool)                   # 形状: (batch_size, max_num_boxes)
 
     # 处理图像

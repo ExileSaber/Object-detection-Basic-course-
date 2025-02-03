@@ -42,10 +42,8 @@ def start_train(args):
             # 前向传播
             class_logits, bbox_preds = model(images)
 
-            # 移除最后一个维度
-            class_logits = class_logits.squeeze(-1)
-            
             # 计算损失
+            class_logits = class_logits.squeeze(-1)
             cls_loss = classification_loss_fn(class_logits[masks], labels[masks])
             reg_loss = regression_loss_fn(bbox_preds[masks], boxes[masks])
             loss = cls_loss + reg_loss
