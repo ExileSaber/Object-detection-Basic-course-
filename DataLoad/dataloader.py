@@ -77,7 +77,7 @@ def collate_fn(batch):
 
     # 转换为 PyTorch 张量
     padded_boxes = torch.tensor(np.array(padded_boxes), dtype=torch.float32)  # 形状: (batch_size, max_num_boxes, 4)
-    padded_labels = torch.tensor(np.array(padded_labels), dtype=torch.float32)   # 形状: (batch_size, max_num_boxes)
+    padded_labels = torch.tensor(np.array(padded_labels), dtype=torch.long)   # 形状: (batch_size, max_num_boxes)
     masks = torch.tensor(np.array(masks), dtype=torch.bool)                   # 形状: (batch_size, max_num_boxes)
 
     # 处理图像
@@ -87,6 +87,7 @@ def collate_fn(batch):
 
 
 def get_dataloader(args, augmentations=None):
+    batch_size = args.batch_size
     # 创建数据集
     dataset = PedestrianDataset(args, args.image_folder, args.xml_folder, transform=ToTensor(), augmentations=augmentations)
 
@@ -100,8 +101,8 @@ def get_dataloader(args, augmentations=None):
     train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size])
 
     # 创建 DataLoader
-    train_loader = DataLoader(train_dataset, batch_size=2, collate_fn=collate_fn, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=2, collate_fn=collate_fn, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=2, collate_fn=collate_fn, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, collate_fn=collate_fn, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, collate_fn=collate_fn, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, collate_fn=collate_fn, shuffle=False)
 
     return train_loader, val_loader, test_loader
