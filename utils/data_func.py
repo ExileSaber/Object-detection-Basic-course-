@@ -17,7 +17,12 @@ def parse_xml(xml_file):
         xmax = int(bbox.find('xmax').text)
         ymax = int(bbox.find('ymax').text)
 
-        boxes.append([xmin, ymin, xmax, ymax])
+        box = [xmin, ymin, xmax, ymax]
+        if box in bbox:
+            print("have same bbox")
+            continue
+
+        boxes.append(box)
         labels.append(1) if name == "person" else labels.append(0)
 
     return boxes, labels

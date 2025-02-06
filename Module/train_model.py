@@ -145,7 +145,7 @@ def simple_model_train_F1Loss(args):
             bbox_preds = bbox_preds.view(bbox_preds.size(0), -1, 4)
 
             # 归一化 bbox
-            # bbox_preds = torch.sigmoid(bbox_preds)  # 确保输出 bbox 在 [0,1] 范围
+            bbox_preds = torch.sigmoid(bbox_preds)  # 确保输出 bbox 在 [0,1] 范围
 
             # 计算损失
             if masks.sum() == 0:

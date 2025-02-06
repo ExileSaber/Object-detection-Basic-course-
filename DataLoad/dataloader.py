@@ -35,13 +35,10 @@ class PedestrianDataset(Dataset):
         xml_name = image_name.replace('.jpg', '.xml').replace('.jpeg', '.xml')
         xml_path = os.path.join(self.xml_folder, xml_name)
         
-        boxes, labels = parse_xml(xml_file=xml_path)
+        boxes, labels = parse_xml(xml_path)
 
         boxes = torch.tensor(boxes, dtype=torch.float32)
         labels = torch.tensor(labels, dtype=torch.float32)
-
-        # 归一化，[0, 1]
-        # boxes = torch.sigmoid(boxes)
 
         if self.augmentations:
             image, boxes, labels = self.augmentations(self.args, image, boxes, labels, self.target_size)
@@ -49,7 +46,19 @@ class PedestrianDataset(Dataset):
         if self.transform:
             image = self.transform(image)
 
+        # 加入 boxes 的归一化 [0, 1]
+        boxes = normalize_bboxes(boxes, self.target_size)
+
         return image, boxes, labels
+
+
+def normalize_bboxes(bboxes, target_size):
+    H, W = target_size  # 获取图像高度和宽度
+    bboxes[:, 0] /= W  # 归一化 xmin
+    bboxes[:, 1] /= H  # 归一化 ymin
+    bboxes[:, 2] /= W  # 归一化 xmax
+    bboxes[:, 3] /= H  # 归一化 ymax
+    return bboxes
 
 
 # 自定义collate_fn来处理不同数量的目标框
