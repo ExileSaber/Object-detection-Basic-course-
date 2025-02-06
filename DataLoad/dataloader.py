@@ -8,7 +8,7 @@ from utils.data_func import parse_xml
 from DataLoad.image_augment import basic_augment
 
 
-MAX_NUM_BOXES = 49
+MAX_NUM_BOXES = 784
 
 
 class PedestrianDataset(Dataset):
@@ -18,7 +18,7 @@ class PedestrianDataset(Dataset):
         self.xml_folder = xml_folder
         self.transform = transform
         self.target_size = target_size
-        self.image_files = [f for f in os.listdir(image_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+        self.image_files = sorted([f for f in os.listdir(image_folder) if f.endswith('.jpg') or f.endswith('.jpeg')])
         self.augmentations = augmentations
     
     def __len__(self):
@@ -39,6 +39,9 @@ class PedestrianDataset(Dataset):
 
         boxes = torch.tensor(boxes, dtype=torch.float32)
         labels = torch.tensor(labels, dtype=torch.float32)
+
+        # 归一化，[0, 1]
+        # boxes = torch.sigmoid(boxes)
 
         if self.augmentations:
             image, boxes, labels = self.augmentations(self.args, image, boxes, labels, self.target_size)
@@ -64,7 +67,7 @@ def collate_fn(batch):
         pad_len = max(0, MAX_NUM_BOXES - num_boxes)
 
         # 2. 填充边界框，使用 [-1, -1, -1, -1] 作为无效框
-        padded_box = np.pad(b, ((0, pad_len), (0, 0)), mode='constant', constant_values=-1)
+        padded_box = np.pad(b, ((0, pad_len), (0, 0)), mode='constant', constant_values=0)
         padded_boxes.append(padded_box)
 
         # 3. 填充类别标签，使用 -1 作为无效类别
@@ -77,7 +80,7 @@ def collate_fn(batch):
 
     # 转换为 PyTorch 张量
     padded_boxes = torch.tensor(np.array(padded_boxes), dtype=torch.float32)  # 形状: (batch_size, max_num_boxes, 4)
-    padded_labels = torch.tensor(np.array(padded_labels), dtype=torch.float32)   # 形状: (batch_size, max_num_boxes)
+    padded_labels = torch.tensor(np.array(padded_labels), dtype=torch.long)   # 形状: (batch_size, max_num_boxes)
     masks = torch.tensor(np.array(masks), dtype=torch.bool)                   # 形状: (batch_size, max_num_boxes)
 
     # 处理图像

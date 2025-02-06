@@ -1,5 +1,5 @@
 import sys
-sys.path.append("F:\Lwm_Code\Visual")
+sys.path.append("F:\Start_Work\Lwm_Code\Object-detection-Basic-course-")
 
 from DataLoad.dataloader import get_dataloader
 from utils.read_cfg import load_yaml_as_namespace
@@ -17,13 +17,16 @@ if __name__ == "__main__":
         print(f"Train batch shape: {images.shape}")
         print(f"Boxes: {boxes}")
         print(f"Labels: {labels}")
+        print(f"masks: {masks}")
 
-    for images, boxes, labels in val_loader:
+    for images, boxes, labels, masks in val_loader:
         print(f"Validation batch shape: {images.shape}")
         print(f"Boxes: {boxes}")
         print(f"Labels: {labels}")
+        print(f"masks: {masks}")
 
-    for images, boxes, labels in test_loader:
+    for images, boxes, labels, masks in test_loader:
         print(f"Test batch shape: {images.shape}")
         print(f"Boxes: {boxes}")
         print(f"Labels: {labels}")
+        print(f"masks: {masks}")

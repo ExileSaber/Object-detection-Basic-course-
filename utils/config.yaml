@@ -1,9 +1,14 @@
-image_folder: F:\Lwm_Data\person_data_01\JPEGImages
-xml_folder: F:\Lwm_Data\person_data_01\Annotations
+image_folder: F:\Start_Work\Lwm_Data\person_dataset\JPEGImages
+xml_folder: F:\Start_Work\Lwm_Data\person_dataset\Annotations
 
-epochs: 100
-batch_size: 2
+epochs: 10000
+batch_size: 100
 num_classes: 2        # 包括背景
+lr: 0.01
+change_lr_step: 100
+
+show_detail_loss: False
+show_detail_epoch: 100
 
 train_rate: 0.8
 val_rate: 0.1
@@ -19,4 +24,4 @@ augment: basic
 hflip: 0.5
 rotate: 0.5
 color: 0.5
-crop: 0.5
+crop: 0
